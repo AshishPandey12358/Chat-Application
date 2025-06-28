@@ -13,7 +13,7 @@ const App = () => {
   const {authUser} = useContext(AuthContext); // when authUser is true means user is authenticated
  
   return (
-    <div className="bg-[url('./src/assets/bgImage.svg')] bg-contain">
+    <div className="bg-[url('/bgImage.svg')] bg-contain">
       <Toaster/>
       <Routes> {/*check if user is authenticated or not if not then he can't access homepage or profilepage but if he is authenticated then he can but they cannotnot login page*/}
         <Route path="/" element={authUser ? <HomePage /> : <Navigate to ="/login"/>}/>
