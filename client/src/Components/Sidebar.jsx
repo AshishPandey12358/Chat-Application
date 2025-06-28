@@ -3,7 +3,7 @@ import assets from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { AuthContext } from '../../context/AuthContext'
 import { ChatContext } from '../../context/ChatContext'
-import { set } from 'mongoose'
+
 import { useState } from 'react'
 
 const Sidebar = () => {
