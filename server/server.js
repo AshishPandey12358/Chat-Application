@@ -1,3 +1,4 @@
+/*
 import express from "express";
 import "dotenv/config";
 import cors from "cors";
@@ -62,3 +63,72 @@ if(process.env.NODE_ENV !== "production"){
 }
 
 export default server
+*/
+
+import express from "express";
+import "dotenv/config";
+import cors from "cors";
+import http from "http";
+import { connectDB } from "./lib/db.js";
+import userRouter from "./Routes/userRoutes.js";
+import messageRouter from "./Routes/messageRoutes.js";
+import { Server } from "socket.io";
+
+const app = express();
+const server = http.createServer(app);
+
+// ✅ FIXED CORS for socket.io
+export const io = new Server(server, {
+  cors: {
+    origin: "https://chat-application-psi-sage.vercel.app",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Track online users
+export const userSocketMap = {};
+
+io.on("connection", (socket) => {
+  const userId = socket.handshake.query.userId;
+  console.log("User Connected", userId);
+
+  if (userId) userSocketMap[userId] = socket.id;
+
+  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+  socket.on("User Disconnect", () => {
+    console.log("User Disconnected", userId);
+    delete userSocketMap[userId];
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User Disconnected (auto)", userId);
+    delete userSocketMap[userId];
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  });
+});
+
+// ✅ FIXED CORS for Express API
+app.use(cors({
+  origin: "https://chat-application-psi-sage.vercel.app",
+  credentials: true,
+}));
+
+app.use(express.json({ limit: "4mb" }));
+
+app.use("/api/status", (req, res) => res.send("Server is Live"));
+app.use("/api/auth", userRouter);
+app.use("/api/messages", messageRouter);
+
+await connectDB();
+
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () =>
+    console.log("Server is Running on PORT: " + PORT)
+  );
+}
+
+export default server;
